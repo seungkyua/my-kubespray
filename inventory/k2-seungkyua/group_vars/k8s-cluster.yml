@@ -1,0 +1,51 @@
+##########################################
+# oreo-kargo added values
+##########################################
+# hostname and hosts file
+populate_inventory_to_hosts_file: false
+override_system_hostname: false
+
+# Helm deployment
+helm_enabled: true
+
+# etcd memory Limits
+etcd_memory_limit: 8192M
+
+## copy admin.conf
+kubeconfig_localhost: true
+kubectl_localhost: true
+
+## calico setting
+ipip_mode: Never
+
+# calico_ip_auto_method: "interface=eth.*"
+# calico_ip_auto_method: "interface=ens6"
+calico_ip_auto_method: "can-reach=8.8.8.8"
+
+kubeadm_enabled: true
+
+docker_insecure_registries:
+  - tacorepo:5000
+
+dashboard_enabled: true
+
+# Local volume provisioner deployment
+local_volume_provisioner_enabled: true
+
+# Nginx ingress controller deployment
+ingress_nginx_enabled: true
+ingress_nginx_host_network: true
+ingress_nginx_nodeselector:
+  node-role.kubernetes.io/ingress: "true"
+
+##########################################
+### stage ceph added values
+############################################
+ceph_version: mimic
+storageclass_name: rbd
+monitors: 192.168.30.23:6789,192.168.30.24:6789,192.168.30.25:6789
+admin_token: QVFBTmRVVlh5UmZoTlJBQTMyZTh6Qk5uajV1VElrMDJEbWFwWmc9PQ==
+user_secret_namespace: openstack
+pool_name: kubes
+user_id: kube
+user_token: QVFDdC9CcFlpZ0o3TVJBQTV2eStjbDM5RXNLcFkzQyt0WEVHckE9PQ==

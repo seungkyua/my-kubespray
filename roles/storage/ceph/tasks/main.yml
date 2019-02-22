@@ -1,0 +1,116 @@
+---
+- name: gather os specific variables
+  include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "{{ ansible_distribution|lower }}-{{ ansible_distribution_version|lower|replace('/', '_') }}.yml"
+        - "{{ ansible_distribution|lower }}-{{ ansible_distribution_release }}.yml"
+        - "{{ ansible_distribution|lower }}-{{ ansible_distribution_major_version|lower|replace('/', '_') }}.yml"
+        - "{{ ansible_distribution|lower }}.yml"
+        - "{{ ansible_os_family|lower }}.yml"
+        - defaults.yml
+      paths:
+        - ../vars
+      skip: true
+  tags:
+    - facts
+
+- name: ensure ceph repository public key is installed
+  action: "{{ ceph_repo_key_info.pkg_key }}"
+  args:
+    id: "{{ item }}"
+    url: "{{ ceph_repo_key_info.url }}"
+    state: present
+  register: keyserver_task_result
+  until: keyserver_task_result|succeeded
+  retries: 4
+  delay: "{{ retry_stagger | random + 3 }}"
+  with_items: "{{ ceph_repo_key_info.repo_keys }}"
+  when: not (ansible_os_family in ["CoreOS", "Container Linux by CoreOS", "RedHat", "Suse"] or is_atomic)
+
+- name: ensure ceph repository is enabled
+  action: "{{ ceph_repo_info.pkg_repo }}"
+  args:
+    repo: "{{ item }}"
+    state: present
+  with_items: "{{ ceph_repo_info.repos }}"
+  when: not (ansible_os_family in ["CoreOS", "Container Linux by CoreOS", "RedHat", "Suse"] or is_atomic) and (ceph_repo_info.repos|length > 0)
+
+- name: Configure docker repository on RedHat/CentOS
+  template:
+    src: "rh_ceph.repo.j2"
+    dest: "/etc/yum.repos.d/ceph.repo"
+  when: ansible_distribution in ["CentOS","RedHat"] and not is_atomic
+
+- name: Copy yum.conf for editing
+  copy:
+    src: "{{ yum_conf }}"
+    dest: "{{ ceph_yum_conf }}"
+    remote_src: yes
+  when: ansible_distribution in ["CentOS","RedHat"] and not is_atomic
+
+- name: Edit copy of yum.conf to set obsoletes=0
+  lineinfile:
+    path: "{{ ceph_yum_conf }}"
+    state: present
+    regexp: '^obsoletes='
+    line: 'obsoletes=0'
+  when: ansible_distribution in ["CentOS","RedHat"] and not is_atomic
+
+- name: ensure ceph packages are installed
+  action: "{{ ceph_package_info.pkg_mgr }}"
+  args:
+    pkg: "{{ item.name }}"
+    force: "{{ item.force|default(omit) }}"
+    conf_file: "{{ item.yum_conf|default(omit) }}"
+    state: present
+    update_cache: yes
+  register: ceph_task_result
+  until: ceph_task_result|succeeded
+  retries: 4
+  delay: "{{ retry_stagger | random + 3 }}"
+  with_items: "{{ ceph_package_info.pkgs }}"
+  when: not (ansible_os_family in ["CoreOS", "Container Linux by CoreOS"] or is_atomic) and (ceph_package_info.pkgs|length > 0)
+
+- name: Copy ceph secret and storageclass yml
+  template:
+    src: "{{item.file}}.j2"
+    dest: "{{kube_config_dir}}/{{item.file}}"
+  with_items:
+    - {name: "ceph-crb", file: ceph-crb.yml, type: clusterrolebinding}
+    - {name: "ceph-cr", file: ceph-cr.yml, type: clusterrole}
+    - {name: "ceph-sa", file: ceph-sa.yml, type: sa}
+    - {name: "ceph-rb", file: ceph-rb.yml, type: rolebinding}
+    - {name: "ceph-r", file: ceph-r.yml, type: role}
+    - {name: "{{ user_secret_name }}", file: ceph-secret-user.yml, type: secret}
+    - {name: "{{ admin_secret_name }}", file: ceph-secret-admin.yml, type: secret}
+    - {name: "{{ storageclass_name }}", file: ceph-storageclass.yml, type: storageclass}
+    - {name: "deployment-rbd-provisioner", file: deployment-rbd-provisioner.yml, type: deployment}
+  register: manifests
+  when: inventory_hostname == groups['kube-master'][0]
+  tags: storage
+
+- name: Create namesapce
+  command: "{{bin_dir}}/kubectl create namespace {{ user_secret_namespace }}"
+  when: inventory_hostname == groups['kube-master'][0]
+  ignore_errors: yes
+  tags: storage
+
+- name: Create clusterrolebinding
+  command: "{{bin_dir}}/kubectl create clusterrolebinding {{ user_secret_namespace }} --clusterrole=cluster-admin \
+           --serviceaccount={{ user_secret_namespace }}:default"
+  when: inventory_hostname == groups['kube-master'][0]
+  ignore_errors: yes
+  tags: storage
+
+
+- name: Ceph Secret and StorageClass | Start Resources
+  kube:
+    name: "{{item.item.name}}"
+    kubectl: "{{bin_dir}}/kubectl"
+    resource: "{{item.item.type}}"
+    filename: "{{kube_config_dir}}/{{item.item.file}}"
+    state: "{{item.changed | ternary('latest','present') }}"
+  with_items: "{{ manifests.results }}"
+  when: inventory_hostname == groups['kube-master'][0]
+  tags: storage

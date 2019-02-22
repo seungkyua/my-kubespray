@@ -1,0 +1,21 @@
+---
+ceph_versioned_pkg:
+  'latest': ceph-common-12.2.5-0.el7
+  'jewel': ceph-common-10.2.10-0.el7
+  'luminous': ceph-common-12.2.5-0.el7
+  'mimic': ceph-common-13.2.4-0.el7
+
+ceph_package_info:
+  pkg_mgr: yum
+  pkgs:
+    - name: "{{ ceph_versioned_pkg[ceph_version | string] }}"
+      yum_conf: "{{ ceph_yum_conf }}"
+
+ceph_repo_key_info:
+  pkg_key: ''
+  repo_keys: []
+
+ceph_repo_info:
+  pkg_repo: ''
+  repos: []
+

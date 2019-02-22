@@ -1,0 +1,8 @@
+[ceph]
+name=Ceph packages for x86_64
+baseurl={{ ceph_rh_repo_base_url }}
+enabled=1
+priority=2
+gpgcheck=1
+gpgkey={{ ceph_rh_repo_gpgkey }}
+{% if http_proxy is defined %}proxy={{ http_proxy }}{% endif %}

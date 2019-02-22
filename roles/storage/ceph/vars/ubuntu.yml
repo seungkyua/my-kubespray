@@ -1,0 +1,27 @@
+---
+ceph_versioned_pkg:
+  'latest': ceph-common=12.2.5-1{{ ansible_distribution_release|lower }}
+  'jewel': ceph-common=10.2.11-1{{ ansible_distribution_release|lower }}
+  'luminous': ceph-common=12.2.5-1{{ ansible_distribution_release|lower }}
+  'mimic': ceph-common=13.2.4-1{{ ansible_distribution_release|lower }}
+
+ceph_package_info:
+  pkg_mgr: apt
+  pkgs:
+    - name: "{{ ceph_versioned_pkg[ceph_version | string] }}"
+      force: yes
+
+ceph_repo_key_info:
+  pkg_key: apt_key
+  url: '{{ ceph_ubuntu_repo_key }}'
+  repo_keys: 
+    - E84AC2C0460F3994
+
+ceph_repo_info:
+  pkg_repo: apt_repository
+  repos:
+    - >
+       deb {{ ceph_ubuntu_repo_base_url }}
+       {{ ansible_distribution_release|lower }}
+       main
+
