@@ -1,6 +1,3 @@
-##########################################
-# oreo-kargo added values
-##########################################
 # hostname and hosts file
 populate_inventory_to_hosts_file: false
 override_system_hostname: false
@@ -17,15 +14,12 @@ kubectl_localhost: true
 
 ## calico setting
 ipip_mode: Never
-
-# calico_ip_auto_method: "interface=eth.*"
-# calico_ip_auto_method: "interface=ens6"
 calico_ip_auto_method: "can-reach=8.8.8.8"
 
 kubeadm_enabled: true
 
 docker_insecure_registries:
-  - tacorepo:5000
+  - seungkyua:5000
 
 dashboard_enabled: true
 
@@ -36,11 +30,9 @@ local_volume_provisioner_enabled: true
 ingress_nginx_enabled: true
 ingress_nginx_host_network: true
 ingress_nginx_nodeselector:
-  node-role.kubernetes.io/ingress: "true"
+  node-role.kubernetes.io/node: ""
 
-##########################################
-### stage ceph added values
-############################################
+# ceph rbd storage values
 ceph_version: mimic
 storageclass_name: rbd
 monitors: 192.168.30.23:6789,192.168.30.24:6789,192.168.30.25:6789

@@ -5,14 +5,14 @@ The my-kubespray has serveral parameters to override and can deploy ceph rbd pro
 
 ## Prerequisites
 
-- 모든 서버에 같은 user 가 있어야 하며 해당 유저는 sudo root 권한을 NOPASSWD 로 설정
-- 디플로이 노드(master 1번) 에서 해당 계정으로 password 없이 다른 모든 서버(localhost 포함)에 ssh 접속이 가능하게 설정
-- /etc/hosts 파일에 cluster 서버 리스트 등록
-- ntp 로 서버간 시간 동기화
-- systemctl restart network.service 로 network restart 가능하게 설정
-- selinux or ufw 와 같은 firewall disable
-- swapoff
-- python 2.7.x 버전 설치  
+- All servers must have the same user, and the user must set root permissions to NOPASSWD in sudo.
+- In the deployment node (or master 1 node), you need to enable ssh access to all other servers (including localhost) without a password to the corresponding account.
+- Register all cluster servers in the /etc/hosts file.
+- Time synchronization between servers with ntp.
+- Enable network restart with `systemctl restart network.service` .
+- Disable firewall such as selinux or ufw.
+- swapoff.
+- Install python 2.7.x in ansible runner node.  
 
 ## Quick Start
 
