@@ -32,6 +32,7 @@ admin_token: QVFBTmRVVlh5UmZoTlJBQTMyZTh6Qk5uajV1VElrMDJEbWFwWmc9PQ==
 pool_name: kubes
 user_id: kube
 user_secret_name: ceph-secret-user
+user_secret_namespace: openstack
 user_token: QVFDdC9CcFlpZ0o3TVJBQTV2eStjbDM5RXNLcFkzQyt0WEVHckE9PQ==
 image_format: 2
 image_feature: layering
