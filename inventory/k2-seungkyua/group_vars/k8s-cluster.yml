@@ -28,6 +28,7 @@ ingress_nginx_enabled: true
 ingress_nginx_host_network: true
 ingress_nginx_nodeselector:
   node-role.kubernetes.io/node: ""
+ingress_nginx_node_count: 1
 
 # ceph rbd storage values
 ceph_version: mimic
