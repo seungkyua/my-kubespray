@@ -5,9 +5,6 @@ override_system_hostname: false
 # Helm deployment
 helm_enabled: true
 
-# etcd memory Limits
-etcd_memory_limit: 8192M
-
 ## copy admin.conf
 kubeconfig_localhost: true
 kubectl_localhost: true
